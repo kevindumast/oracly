@@ -28,7 +28,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   return (
     <ProviderDialogProvider value={providerDialogValue}>
       <ConnectProviderDialog open={providerDialogOpen} onOpenChange={setProviderDialogOpen} />
-      <div className="flex min-h-screen bg-muted/20">
+      <div className="flex min-h-screen bg-background transition-colors duration-300">
         <DashboardSidebar isOpen={sidebarOpen} onOpenChange={setSidebarOpen} />
         <div className="flex flex-1 flex-col">
           <DashboardTopbar
@@ -36,7 +36,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
             onConnectProvider={() => setProviderDialogOpen(true)}
           />
           <ScrollArea className="flex-1">
-            <div className="mx-auto w-full max-w-6xl space-y-10 px-4 py-8">{children}</div>
+            <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 animate-in">
+              {children}
+            </main>
           </ScrollArea>
         </div>
       </div>

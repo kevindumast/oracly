@@ -600,13 +600,13 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
 
   return (
     <>
-      <Card className="border-border/60 bg-card/80 backdrop-blur">
+      <Card className="border-border/60 bg-card/80 backdrop-blur card-hover overflow-hidden">
         <CardHeader className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
           <div className="space-y-1">
-            <CardDescription>Token allocation</CardDescription>
-            <CardTitle className="text-lg text-foreground">Portfolio breakdown</CardTitle>
+            <CardDescription className="text-xs font-medium text-muted-foreground/80">Token allocation</CardDescription>
+            <CardTitle className="text-xl font-bold text-foreground">Portfolio breakdown</CardTitle>
           </div>
-          <CardDescription className="text-xs text-muted-foreground">
+          <CardDescription className="text-xs text-muted-foreground/90">
             Includes trades, deposits, and withdrawals imported from Binance.
           </CardDescription>
         </CardHeader>
@@ -722,7 +722,7 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
                         <>
                           <tr
                             key={token.symbol}
-                            className="border-b border-border/30 transition-colors hover:bg-muted/40"
+                            className="group border-b border-border/30 transition-all duration-200 hover:bg-muted/50"
                           >
                             <td className="px-4 py-3 text-center">
                               <button
@@ -809,13 +809,13 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
                                 <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
                                   <div className="flex flex-col gap-1">
                                     <span className="text-xs text-muted-foreground font-semibold uppercase">Bought</span>
-                                    <span className="text-sm font-medium text-emerald-500">
+                                    <span className="text-sm font-medium text-[hsl(var(--positive))]">
                                       +{numberFormatter.format(token.buyQuantity)}
                                     </span>
                                   </div>
                                   <div className="flex flex-col gap-1">
                                     <span className="text-xs text-muted-foreground font-semibold uppercase">Sold</span>
-                                    <span className="text-sm font-medium text-red-500">
+                                    <span className="text-sm font-medium text-[hsl(var(--negative))]">
                                       -{numberFormatter.format(token.sellQuantity)}
                                     </span>
                                   </div>
@@ -873,12 +873,12 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
               </SheetHeader>
 
               <div className="space-y-6">
-                <Card className="border-border/60 bg-card/80 backdrop-blur">
+                <Card className="border-border/60 bg-card/80 backdrop-blur card-hover">
                   <CardHeader className="space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <CardDescription>Price markers</CardDescription>
-                        <CardTitle className="text-lg">Trade history</CardTitle>
+                      <div className="space-y-1">
+                        <CardDescription className="text-xs font-medium text-muted-foreground/80">Price markers</CardDescription>
+                        <CardTitle className="text-xl font-bold">Trade history</CardTitle>
                       </div>
                       <div className="flex items-center gap-1 rounded-full bg-muted/40 p-1">
                         {(Object.keys(RANGE_CONFIG) as RangeKey[]).map((key) => (
@@ -925,15 +925,15 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
                           >
                             <defs>
                               <linearGradient id="tokenPriceGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#C9A646" stopOpacity={0.35} />
-                                <stop offset="100%" stopColor="#C9A646" stopOpacity={0} />
+                                <stop offset="0%" stopColor="var(--profit-color)" stopOpacity={0.35} />
+                                <stop offset="100%" stopColor="var(--profit-color)" stopOpacity={0} />
                               </linearGradient>
                             </defs>
                             <CartesianGrid
                               stroke="hsl(var(--border))"
-                              opacity={0.2}
+                              opacity={0.3}
                               vertical={false}
-                              strokeDasharray="4 4"
+                              strokeDasharray="3 3"
                             />
                             <XAxis
                               type="number"
@@ -948,6 +948,9 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
                                 })
                               }
                               axisLine={false}
+                              stroke="hsl(var(--muted-foreground))"
+                              fontSize={12}
+                              tickMargin={8}
                             />
                             <YAxis
                               dataKey="price"
@@ -964,12 +967,15 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
                               tickLine={false}
                               axisLine={false}
                               width={72}
-                              stroke="hsl(var(--muted-foreground) / 0.8)"
+                              stroke="hsl(var(--muted-foreground))"
                               tickFormatter={(value) => priceFormatter.format(Number(value))}
+                              fontSize={12}
+                              tickMargin={8}
                             />
                             <RechartsTooltip
                               cursor={{
-                                stroke: "hsl(var(--border))",
+                                stroke: "hsl(var(--muted-foreground))",
+                                strokeWidth: 1,
                                 strokeDasharray: "3 3",
                               }}
                               content={<PriceTooltip />}
@@ -977,29 +983,31 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
                             <Area
                               type="monotone"
                               dataKey="price"
-                              stroke="#C9A646"
+                              stroke="var(--profit-color)"
                               strokeWidth={2.5}
                               strokeLinecap="round"
                               fill="url(#tokenPriceGradient)"
-                              isAnimationActive={false}
+                              isAnimationActive={true}
+                              animationDuration={800}
+                              animationEasing="ease-in-out"
                             />
                             <Scatter
                               data={chart.buys}
                               dataKey="price"
-                              fill="#22c55e"
-                              stroke="#022c16"
-                              strokeWidth={1}
+                              fill="hsl(var(--positive))"
+                              stroke="hsl(var(--positive) / 0.3)"
+                              strokeWidth={1.5}
                               shape="circle"
-                              r={4}
+                              r={5}
                             />
                             <Scatter
                               data={chart.sells}
                               dataKey="price"
-                              fill="#ef4444"
-                              stroke="#450a0a"
-                              strokeWidth={1}
+                              fill="hsl(var(--negative))"
+                              stroke="hsl(var(--negative) / 0.3)"
+                              strokeWidth={1.5}
                               shape="circle"
-                              r={4}
+                              r={5}
                             />
                           </ComposedChart>
                         </ResponsiveContainer>
@@ -1014,10 +1022,10 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
                   </CardContent>
                 </Card>
 
-                <Card className="border-border/60 bg-card/80 backdrop-blur">
+                <Card className="border-border/60 bg-card/80 backdrop-blur card-hover">
                   <CardHeader>
-                    <CardDescription>Detailed timeline</CardDescription>
-                    <CardTitle className="text-lg">Events</CardTitle>
+                    <CardDescription className="text-xs font-medium text-muted-foreground/80">Detailed timeline</CardDescription>
+                    <CardTitle className="text-xl font-bold">Events</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="max-h-[280px]">
@@ -1029,11 +1037,11 @@ export function TokenPortfolioSection({ tokens }: TokenPortfolioSectionProps) {
                                 <Badge
                                   variant="outline"
                                   className={cn(
-                                    "uppercase tracking-wide",
-                                    event.type === "BUY" && "border-emerald-500/40 text-emerald-500",
-                                    event.type === "SELL" && "border-red-500/40 text-red-500",
-                                    event.type === "DEPOSIT" && "border-sky-500/40 text-sky-500",
-                                    event.type === "WITHDRAWAL" && "border-purple-500/40 text-purple-500"
+                                    "uppercase tracking-wide font-semibold",
+                                    event.type === "BUY" && "border-[hsl(var(--positive))]/40 text-[hsl(var(--positive))]",
+                                    event.type === "SELL" && "border-[hsl(var(--negative))]/40 text-[hsl(var(--negative))]",
+                                    event.type === "DEPOSIT" && "border-[hsl(var(--chart-2))]/40 text-[hsl(var(--chart-2))]",
+                                    event.type === "WITHDRAWAL" && "border-[hsl(var(--chart-5))]/40 text-[hsl(var(--chart-5))]"
                                   )}
                                 >
                                   {event.type}
@@ -1095,22 +1103,22 @@ function PriceTooltip({ active, payload }: ExtendedTooltipProps) {
   const isEvent = (raw as ChartPoint).type !== undefined;
 
   return (
-    <div className="rounded-xl border border-border/70 bg-background/95 px-4 py-3 text-xs shadow-lg">
-      <p className="text-sm font-semibold text-foreground">
+    <div className="rounded-lg border border-border bg-popover px-4 py-3 text-xs shadow-xl backdrop-blur">
+      <p className="text-sm font-bold text-foreground">
         {priceFormatter.format(priceValue)}
       </p>
       {percentChange !== undefined ? (
         <p
           className={cn(
-            "text-xs font-medium",
-            percentChange >= 0 ? "text-emerald-500" : "text-red-500"
+            "text-xs font-semibold",
+            percentChange >= 0 ? "text-[hsl(var(--positive))]" : "text-[hsl(var(--negative))]"
           )}
         >
           {percentChange >= 0 ? "+" : ""}
           {percentChange.toFixed(2)}%
         </p>
       ) : null}
-      <p className="mt-1 text-[11px] text-muted-foreground">
+      <p className="mt-1 text-[11px] font-medium text-muted-foreground">
         {new Date(timestamp).toLocaleString("fr-FR", {
           year: "numeric",
           month: "short",
@@ -1120,7 +1128,7 @@ function PriceTooltip({ active, payload }: ExtendedTooltipProps) {
         })}
       </p>
       {isEvent ? (
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 text-[11px] font-medium text-muted-foreground">
           {(raw as ChartPoint).type} � Qty{" "}
           {numberFormatter.format((raw as ChartPoint).quantity)}
         </p>

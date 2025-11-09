@@ -49,7 +49,23 @@ const TIMEFRAME_OPTIONS: TimeframeOption[] = [
   { label: "Tout", value: "ALL", durationMs: null },
 ];
 
-const ALLOCATION_COLORS = ["#4F46E5", "#22C55E", "#F97316", "#0EA5E9", "#E11D48", "#FACC15", "#6366F1", "#14B8A6"];
+// Allocation colors are now CSS variables - retrieve them at runtime
+const getAllocationColors = () => {
+  if (typeof window === "undefined") {
+    return ["#4F46E5", "#22C55E", "#F97316", "#0EA5E9", "#E11D48", "#FACC15", "#6366F1", "#14B8A6"];
+  }
+  const style = getComputedStyle(document.documentElement);
+  return [
+    style.getPropertyValue("--allocation-1").trim() || "#4F46E5",
+    style.getPropertyValue("--allocation-2").trim() || "#22C55E",
+    style.getPropertyValue("--allocation-3").trim() || "#F97316",
+    style.getPropertyValue("--allocation-4").trim() || "#0EA5E9",
+    style.getPropertyValue("--allocation-5").trim() || "#E11D48",
+    style.getPropertyValue("--allocation-6").trim() || "#FACC15",
+    style.getPropertyValue("--allocation-7").trim() || "#6366F1",
+    style.getPropertyValue("--allocation-8").trim() || "#14B8A6",
+  ];
+};
 
 type OverviewTabProps = {
   profitSummary: ProfitSummary;
@@ -109,17 +125,19 @@ export function OverviewTab({
   }, [filteredHistory]);
 
   const allocationData = useMemo(
-    () =>
-      allocation.map((item, index) => ({
+    () => {
+      const colors = getAllocationColors();
+      return allocation.map((item, index) => ({
         ...item,
-        color: ALLOCATION_COLORS[index % ALLOCATION_COLORS.length],
-      })),
+        color: colors[index % colors.length],
+      }));
+    },
     [allocation]
   );
 
   return (
     <>
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 animate-in">
         <StatCard
           title="Profit total"
           value={currencyFormatter.format(profitSummary.totalProfitUsd)}
@@ -143,19 +161,19 @@ export function OverviewTab({
       </section>
 
       <section className="grid gap-5 xl:grid-cols-3">
-        <Card className="border-border/60 bg-card/80 backdrop-blur xl:col-span-2 flex flex-col">
+        <Card className="border-border/60 bg-card/80 backdrop-blur xl:col-span-2 flex flex-col card-hover overflow-hidden">
           <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <CardDescription>Historique</CardDescription>
-              <CardTitle className="text-xl text-foreground">Profit cumulé</CardTitle>
+            <div className="space-y-1">
+              <CardDescription className="text-xs font-medium text-muted-foreground/80">Historique</CardDescription>
+              <CardTitle className="text-2xl font-bold text-foreground">Profit cumulé</CardTitle>
             </div>
-            <div className="flex items-center gap-1 rounded-full bg-muted/50 p-1">
+            <div className="flex items-center gap-1 rounded-full bg-muted/50 p-1 shadow-sm">
               {TIMEFRAME_OPTIONS.map((option) => (
                 <Button
                   key={option.value}
                   variant={timeframe === option.value ? "default" : "ghost"}
                   size="sm"
-                  className="h-8 rounded-full px-3 text-xs"
+                  className="h-8 rounded-full px-3 text-xs font-medium transition-all"
                   onClick={() => setTimeframe(option.value)}
                 >
                   {option.label}
@@ -169,41 +187,58 @@ export function OverviewTab({
                 <AreaChart data={filteredHistory}>
                   <defs>
                     <linearGradient id="overviewHistoryGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#C9A646" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#C9A646" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--profit-color)" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="var(--profit-color)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                    opacity={0.3}
+                    vertical={false}
+                  />
                   <XAxis
                     dataKey="label"
                     stroke="hsl(var(--muted-foreground))"
                     tickLine={false}
                     axisLine={false}
+                    fontSize={12}
+                    tickMargin={8}
                   />
                   <YAxis
                     stroke="hsl(var(--muted-foreground))"
                     tickLine={false}
                     axisLine={false}
-                    width={64}
+                    width={70}
                     domain={historyYAxisDomain as [number, number]}
                     tickFormatter={(value) => currencyFormatter.format(value)}
+                    fontSize={12}
+                    tickMargin={8}
                   />
                   <RechartsTooltip
-                    cursor={{ strokeDasharray: "3 3" }}
+                    cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "3 3" }}
                     contentStyle={{
-                      background: "hsl(var(--background))",
+                      background: "hsl(var(--popover))",
                       border: "1px solid hsl(var(--border))",
-                      borderRadius: "12px",
+                      borderRadius: "var(--radius)",
                       color: "hsl(var(--foreground))",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                     }}
-                    formatter={(value: number) => currencyFormatter.format(value)}
+                    labelStyle={{
+                      color: "hsl(var(--muted-foreground))",
+                      fontWeight: 500,
+                      marginBottom: "4px",
+                    }}
+                    formatter={(value: number) => [currencyFormatter.format(value), "Profit"]}
                   />
                   <Area
                     type="monotone"
                     dataKey="profitUsd"
-                    stroke="#C9A646"
-                    strokeWidth={3}
+                    stroke="var(--profit-color)"
+                    strokeWidth={2.5}
                     fill="url(#overviewHistoryGradient)"
+                    animationDuration={800}
+                    animationEasing="ease-in-out"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -216,10 +251,10 @@ export function OverviewTab({
         </Card>
 
         <div className="grid gap-5 auto-rows-fr">
-          <Card className="border-border/60 bg-card/80 backdrop-blur flex flex-col">
+          <Card className="border-border/60 bg-card/80 backdrop-blur flex flex-col card-hover overflow-hidden">
             <CardHeader>
-              <CardDescription>Répartition</CardDescription>
-              <CardTitle className="text-lg text-foreground">Allocation par symbole</CardTitle>
+              <CardDescription className="text-xs font-medium text-muted-foreground/80">Répartition</CardDescription>
+              <CardTitle className="text-xl font-bold text-foreground">Allocation par symbole</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-6 lg:flex-row lg:items-center">
               {allocationData.length > 0 ? (
@@ -275,21 +310,28 @@ export function OverviewTab({
             </CardFooter>
           </Card>
 
-          <Card className="border-border/60 bg-card/80 backdrop-blur flex flex-col">
+          <Card className="border-border/60 bg-card/80 backdrop-blur flex flex-col card-hover overflow-hidden">
             <CardHeader>
-              <CardDescription>Performance (cumulative)</CardDescription>
-              <CardTitle className="text-lg text-foreground">Profit vs. benchmark</CardTitle>
+              <CardDescription className="text-xs font-medium text-muted-foreground/80">Performance (cumulative)</CardDescription>
+              <CardTitle className="text-xl font-bold text-foreground">Profit vs. benchmark</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 h-72">
               {performanceSeries.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={performanceSeries}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                      opacity={0.3}
+                      vertical={false}
+                    />
                     <XAxis
                       dataKey="label"
                       stroke="hsl(var(--muted-foreground))"
                       tickLine={false}
                       axisLine={false}
+                      fontSize={12}
+                      tickMargin={8}
                     />
                     <YAxis
                       stroke="hsl(var(--muted-foreground))"
@@ -297,31 +339,44 @@ export function OverviewTab({
                       axisLine={false}
                       width={56}
                       tickFormatter={(value) => `${value.toFixed(1)}%`}
+                      fontSize={12}
+                      tickMargin={8}
                     />
                     <RechartsTooltip
+                      cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "3 3" }}
                       contentStyle={{
-                        background: "hsl(var(--background))",
+                        background: "hsl(var(--popover))",
                         border: "1px solid hsl(var(--border))",
-                        borderRadius: "12px",
+                        borderRadius: "var(--radius)",
                         color: "hsl(var(--foreground))",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                       }}
-                      formatter={(value: number) => `${value.toFixed(2)}%`}
+                      labelStyle={{
+                        color: "hsl(var(--muted-foreground))",
+                        fontWeight: 500,
+                        marginBottom: "4px",
+                      }}
+                      formatter={(value: number, name: string) => [`${value.toFixed(2)}%`, name]}
                     />
                     <Line
                       type="monotone"
                       dataKey="profitPercent"
-                      stroke="#2563EB"
-                      strokeWidth={2}
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2.5}
                       dot={false}
                       name="All-time profit"
+                      animationDuration={800}
+                      animationEasing="ease-in-out"
                     />
                     <Line
                       type="monotone"
                       dataKey="benchmarkPercent"
-                      stroke="#F97316"
-                      strokeWidth={2}
+                      stroke="var(--benchmark-color)"
+                      strokeWidth={2.5}
                       dot={false}
                       name="Net invested"
+                      animationDuration={800}
+                      animationEasing="ease-in-out"
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -348,26 +403,24 @@ type StatCardProps = {
 };
 
 function StatCard({ title, value, subtitle, accent }: StatCardProps) {
+  const accentColor = accent === "positive"
+    ? "text-[hsl(var(--positive))]"
+    : accent === "negative"
+      ? "text-[hsl(var(--negative))]"
+      : "text-foreground";
+
   return (
-    <Card className="border-border/60 bg-card/80 backdrop-blur">
+    <Card className="border-border/60 bg-card/80 backdrop-blur stat-card-hover group">
       <CardHeader className="space-y-1 pb-2">
-        <CardDescription className="text-[13px] uppercase tracking-[0.35em] text-muted-foreground/80">
+        <CardDescription className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground/70">
           {title}
         </CardDescription>
-        <CardTitle
-          className={`text-2xl ${
-            accent === "positive"
-              ? "text-emerald-500"
-              : accent === "negative"
-                ? "text-red-500"
-                : "text-foreground"
-          }`}
-        >
+        <CardTitle className={`text-3xl font-bold transition-colors ${accentColor}`}>
           {value}
         </CardTitle>
       </CardHeader>
       {subtitle ? (
-        <CardContent className="text-xs text-muted-foreground">{subtitle}</CardContent>
+        <CardContent className="text-sm text-muted-foreground/90">{subtitle}</CardContent>
       ) : null}
     </Card>
   );
@@ -380,24 +433,28 @@ type PerformerCardProps = {
 };
 
 function PerformerCard({ title, performer, fallbackLabel = "N/A" }: PerformerCardProps) {
+  const profitColor = performer && performer.profitUsd >= 0
+    ? "text-[hsl(var(--positive))]"
+    : "text-[hsl(var(--negative))]";
+
   return (
-    <Card className="border-border/60 bg-card/80 backdrop-blur">
+    <Card className="border-border/60 bg-card/80 backdrop-blur stat-card-hover group">
       <CardHeader className="space-y-1 pb-2">
-        <CardDescription className="text-[13px] uppercase tracking-[0.35em] text-muted-foreground/80">
+        <CardDescription className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground/70">
           {title}
         </CardDescription>
-        <CardTitle className="text-2xl text-foreground">
+        <CardTitle className="text-3xl font-bold text-foreground">
           {performer ? performer.symbol : fallbackLabel}
         </CardTitle>
       </CardHeader>
-      <CardContent className="text-xs text-muted-foreground">
+      <CardContent className="text-sm text-muted-foreground">
         {performer ? (
           <>
-            <span className={performer.profitUsd >= 0 ? "text-emerald-500" : "text-red-500"}>
+            <span className={`font-semibold ${profitColor}`}>
               {formatCurrencyWithSign(performer.profitUsd)}
             </span>
             {performer.profitPercentage !== undefined ? (
-              <span className="ml-1">
+              <span className="ml-1.5 text-muted-foreground/80">
                 {formatPercent(performer.profitPercentage)}
               </span>
             ) : null}
