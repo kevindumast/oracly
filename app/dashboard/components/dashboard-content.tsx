@@ -55,8 +55,6 @@ export function DashboardContent({ userName }: DashboardContentProps) {
     setRefreshError(null);
 
     try {
-      let totalTradeInserted = 0;
-      let totalTradeFetched = 0;
       let totalDepositInserted = 0;
       let totalDepositFetched = 0;
       let totalWithdrawalInserted = 0;
@@ -79,13 +77,11 @@ export function DashboardContent({ userName }: DashboardContentProps) {
         processedSymbols += result.symbols?.length ?? 0;
       }
 
-      const totalFetched =
-        totalTradeFetched + totalDepositFetched + totalWithdrawalFetched;
+      const totalFetched = totalDepositFetched + totalWithdrawalFetched;
 
       setRefreshMessage(
         [
           "Synchronisation terminée",
-          `${totalTradeInserted} trade${totalTradeInserted === 1 ? "" : "s"}`,
           `${totalDepositInserted} dépôt${totalDepositInserted === 1 ? "" : "s"}`,
           `${totalWithdrawalInserted} retrait${totalWithdrawalInserted === 1 ? "" : "s"}`,
           `(${totalFetched} enregistrements)`,
